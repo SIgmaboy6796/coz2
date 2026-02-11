@@ -54,7 +54,7 @@ export class Game {
         requestAnimationFrame(() => this.animate());
         const deltaTime = this.clock.getDelta();
 
-        this.player.update(deltaTime);
+        this.player.update();
         updatePhysics(this.Ammo, this.physicsWorld, this.rigidBodies, deltaTime);
 
         this.renderer.render(this.scene, this.camera);

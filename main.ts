@@ -1,5 +1,5 @@
-import '@/styles/main.css';
-import { Game } from './game';
+import './main.css';
+import { Game } from './src/game';
 
 declare global {
     interface Window {

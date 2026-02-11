@@ -59,29 +59,35 @@ export class Player {
         });
     }
 
-    public update(deltaTime: number) {
-        const moveDirection = new THREE.Vector3();
-        if (this.input.forward) moveDirection.z -= 1;
-        if (this.input.backward) moveDirection.z += 1;
-        if (this.input.left) moveDirection.x -= 1;
-        if (this.input.right) moveDirection.x += 1;
+    public update() {
+        const inputDirection = new THREE.Vector3();
+        if (this.input.forward) inputDirection.z -= 1;
+        if (this.input.backward) inputDirection.z += 1;
+        if (this.input.left) inputDirection.x -= 1;
+        if (this.input.right) inputDirection.x += 1;
 
-        if (moveDirection.lengthSq() > 0) {
-            moveDirection.normalize().multiplyScalar(this.moveSpeed * deltaTime);
-            
+        const yVelocity = this.body.getLinearVelocity().y();
+
+        if (inputDirection.lengthSq() > 0) {
+            inputDirection.normalize();
+
             // Apply movement relative to camera direction
             const forward = new THREE.Vector3();
             this.camera.getWorldDirection(forward);
             forward.y = 0;
             forward.normalize();
 
-            const right = new THREE.Vector3().crossVectors(this.camera.up, forward).normalize();
+            const right = new THREE.Vector3().crossVectors(this.camera.up, forward);
 
-            const desiredVelocity = new THREE.Vector3()
-                .add(forward.multiplyScalar(-moveDirection.z))
-                .add(right.multiplyScalar(moveDirection.x));
+            const moveDirection = new THREE.Vector3();
+            moveDirection.addScaledVector(forward, -inputDirection.z);
+            moveDirection.addScaledVector(right, inputDirection.x);
+            moveDirection.normalize();
 
-            this.body.setLinearVelocity(new this.Ammo.btVector3(desiredVelocity.x * this.moveSpeed, this.body.getLinearVelocity().y(), desiredVelocity.z * this.moveSpeed));
+            const newVelocity = new this.Ammo.btVector3(moveDirection.x * this.moveSpeed, yVelocity, moveDirection.z * this.moveSpeed);
+            this.body.setLinearVelocity(newVelocity);
+        } else {
+            this.body.setLinearVelocity(new this.Ammo.btVector3(0, yVelocity, 0));
         }
 
         if (this.input.jump) {
@@ -90,6 +96,7 @@ export class Player {
             if (this.body.getCenterOfMassPosition().y() < 2) {
                  this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
             }
+            this.input.jump = false; // Consume jump input to prevent continuous jumping
         }
 
         const pos = this.body.getCenterOfMassPosition();
