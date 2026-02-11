@@ -1,15 +1,10 @@
 import './main.css';
+import Ammo from 'ammo.js';
 import { Game } from './src/game';
 
-declare global {
-    interface Window {
-        Ammo: () => Promise<any>;
-    }
-}
-
 async function main() {
-    const Ammo = await window.Ammo();
-    new Game(Ammo);
+    const AmmoModule = await Ammo();
+    new Game(AmmoModule);
 }
 
 main();
