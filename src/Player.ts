@@ -13,7 +13,7 @@ export class Player {
     private moveSpeed = 10;
     private jumpForce = 7;
 
-    constructor(private Ammo: any, camera: THREE.PerspectiveCamera, scene: THREE.Scene, physicsWorld: any) {
+    constructor(private Ammo: any, camera: THREE.PerspectiveCamera, physicsWorld: any) {
         this.camera = camera;
 
         const radius = 0.5;

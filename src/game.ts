@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { setupScene } from '@/rendering/scene';
-import { createPhysicsWorld, updatePhysics, createRigidBody } from '@/physics/physics';
-import { Player } from '@/game/player/Player';
+import { setupScene } from '@/scene';
+import { createPhysicsWorld, updatePhysics, createRigidBody } from '@/physics';
+import { Player } from '@/Player';
 
 export class Game {
     private scene: THREE.Scene;
@@ -23,7 +23,7 @@ export class Game {
         this.createGround();
         this.createDynamicBox();
 
-        this.player = new Player(this.Ammo, this.camera, this.scene, this.physicsWorld);
+        this.player = new Player(this.Ammo, this.camera, this.scene);
 
         this.animate();
     }
