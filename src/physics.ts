@@ -32,6 +32,8 @@ export function createRigidBody(Ammo: any, object: THREE.Mesh, shape: any, mass:
         object.userData.physicsBody = body;
         rigidBodies.push(object);
     }
+
+    return body;
 }
 
 export function updatePhysics(Ammo: any, physicsWorld: any, rigidBodies: THREE.Mesh[], deltaTime: number) {

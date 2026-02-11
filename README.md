@@ -9,13 +9,14 @@ This is the foundational codebase for a 3D shooter game, inspired by games with 
 - **Build Tool:** [Vite](https://vitejs.dev/)
 - **Language:** [TypeScript](https://www.typescriptlang.org/)
 
-## Controls
+## Current
 
 - **W, A, S, D:** Move
 - **Space:** Jump
 - **E:** Pick up / Drop object
 - **Left Click (while holding):** Throw object
 - **Right Click (while holding):** Drop object
+
 
 ## Features to be added in the future
 
