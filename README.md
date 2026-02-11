@@ -9,13 +9,20 @@ This is the foundational codebase for a 3D shooter game, inspired by games with 
 - **Build Tool:** [Vite](https://vitejs.dev/)
 - **Language:** [TypeScript](https://www.typescriptlang.org/)
 
-## Getting Started
+## Controls
 
-1.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-2.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
+- **W, A, S, D:** Move
+- **Space:** Jump
+- **E:** Pick up / Drop object
+- **Left Click (while holding):** Throw object
+- **Right Click (while holding):** Drop object
+
+## Features to be added in the future
+
+More things to interact with
+Decent lighting
+Optimisation
+Multiplayer
+Proper explosions and effects
+Abilities
+Custom weapon attachments
