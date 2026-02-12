@@ -20,6 +20,7 @@ export class PauseMenu {
     private onHostClick: (() => void) | null = null;
     private onStopHostClick: (() => void) | null = null;
     private isHosting = false;
+    private shareUrl = '';
 
     constructor(private defaultSettings: GameSettings) {
         this.settings = JSON.parse(JSON.stringify(defaultSettings));
@@ -78,6 +79,7 @@ export class PauseMenu {
     }
 
     public showShareLink(url: string) {
+        this.shareUrl = url;
         const container = document.getElementById('share-container');
         const input = document.getElementById('share-url') as HTMLInputElement;
         if (container && input) {
@@ -93,6 +95,9 @@ export class PauseMenu {
 
         this.container = document.createElement('div');
         this.container.id = 'pause-menu';
+        
+        // Restore hosting status button if needed
+        const shouldShowShare = this.isHosting && this.shareUrl !== '';
         this.container.innerHTML = `
             <style>
                 #pause-menu {
@@ -331,10 +336,10 @@ export class PauseMenu {
 
                 <div class="settings-section">
                     <div class="setting-label">Multiplayer</div>
-                    <button class="pause-button host-button" id="host-btn">HOST GAME</button>
-                    <div id="share-container">
+                    <button class="pause-button host-button" id="host-btn">${this.isHosting ? 'STOP HOSTING' : 'HOST GAME'}</button>
+                    <div id="share-container" style="display: ${shouldShowShare ? 'block' : 'none'};">
                         <div class="setting-label" style="margin-bottom: 10px;">Share this link:</div>
-                        <input type="text" id="share-url" readonly>
+                        <input type="text" id="share-url" value="${this.shareUrl}" readonly>
                     </div>
                 </div>
                 
@@ -346,6 +351,17 @@ export class PauseMenu {
         `;
 
         document.body.appendChild(this.container);
+        
+        // Apply hosting status styling to button immediately after render
+        const hostBtn = document.getElementById('host-btn') as HTMLButtonElement;
+        if (hostBtn) {
+            if (this.isHosting) {
+                hostBtn.textContent = 'STOP HOSTING';
+                hostBtn.style.background = 'linear-gradient(135deg, #ff6464 0%, #dd4040 100%)';
+                hostBtn.style.borderColor = 'rgba(255, 100, 100, 0.5)';
+            }
+        }
+        
         this.attachEventListeners();
     }
 

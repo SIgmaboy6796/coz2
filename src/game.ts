@@ -140,16 +140,20 @@ export class Game {
 
     private async hostGame() {
         try {
+            console.log('[Game] Starting host...');
             const shareUrl = await this.multiplayer.hostGame();
             this.player.setHosting(true);
             this.player.showMultiplayerShareLink(shareUrl);
+            console.log('[Game] Hosting started successfully');
         } catch (error) {
-            console.error('Failed to host game:', error);
+            console.error('[Game] Failed to host game:', error);
         }
     }
 
     private stopHosting() {
+        console.log('[Game] Stopping host...');
         this.multiplayer.stopHosting();
         this.player.setHosting(false);
+        console.log('[Game] Hosting stopped');
     }
 }

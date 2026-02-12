@@ -48,11 +48,11 @@ export class Multiplayer {
         // Generate a unique room ID
         const roomId = 'room_' + Math.random().toString(36).substr(2, 9);
         
-        // In a real implementation, this would contact a signaling server
-        // For now, return a shareable URL
+        // Return a shareable URL
         const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}&host=${this.peerId}`;
         
-        console.log('Hosting game with room ID:', roomId);
+        console.log('[Multiplayer] Hosting game with room ID:', roomId);
+        console.log('[Multiplayer] Share URL:', shareUrl);
         
         return shareUrl;
     }
@@ -61,11 +61,16 @@ export class Multiplayer {
         this.isHost = false;
         
         try {
-            // In a real implementation, connect to signaling server and other peers
-            console.log('Joining game room:', roomId);
+            if (!roomId || roomId.length === 0) {
+                console.warn('[Multiplayer] Invalid room ID - empty string');
+                return false;
+            }
+            
+            console.log('[Multiplayer] Joining game room:', roomId);
+            // TODO: Connect to signaling server and other peers
             return true;
         } catch (error) {
-            console.error('Failed to join game:', error);
+            console.error('[Multiplayer] Failed to join game:', error);
             return false;
         }
     }
@@ -81,7 +86,7 @@ export class Multiplayer {
                             data: state
                         }));
                     } catch (e) {
-                        // Silently fail on closed connections
+                        console.warn('[Multiplayer] Failed to send player state:', e);
                     }
                 }
             });
@@ -98,7 +103,7 @@ export class Multiplayer {
                             data: state
                         }));
                     } catch (e) {
-                        // Silently fail on closed connections
+                        console.warn('[Multiplayer] Failed to send object state:', e);
                     }
                 }
             });
@@ -128,6 +133,8 @@ export class Multiplayer {
     public stopHosting() {
         this.isHost = false;
         
+        console.log('[Multiplayer] Stopping hosting, notifying', this.peers.size, 'peer(s)');
+        
         // Notify all connected peers that hosting has stopped
         this.peers.forEach((peer) => {
             if (peer && peer.send) {
@@ -136,8 +143,9 @@ export class Multiplayer {
                         type: 'hostStopped',
                         message: 'User stopped hosting'
                     }));
+                    console.log('[Multiplayer] Notified peer of host stop');
                 } catch (e) {
-                    // Ignore errors
+                    console.warn('[Multiplayer] Failed to notify peer:', e);
                 }
             }
         });
@@ -145,7 +153,7 @@ export class Multiplayer {
         // Disconnect all peers
         this.disconnect();
         
-        console.log('Stopped hosting game');
+        console.log('[Multiplayer] Stopped hosting game');
     }
 
     public getHostingStatus(): boolean {

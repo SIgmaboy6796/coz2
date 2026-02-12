@@ -222,9 +222,11 @@ export class Player {
             this.body.setLinearVelocity(new this.Ammo.btVector3(0, yVelocity, 0));
         }
 
-        if (this.input.jump && this.jumpCooldown === 0 && yVelocity <= 0.1) {
+        if (this.input.jump && this.jumpCooldown === 0 && yVelocity < 0.5) {
+            console.log('Jump! yVelocity:', yVelocity);
             this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
-            this.jumpCooldown = 5;
+            this.jumpCooldown = 10;
+            this.input.jump = false; // Prevent rapid re-jumping
         }
 
         const motionState = this.body.getMotionState();
