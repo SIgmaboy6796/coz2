@@ -154,7 +154,7 @@ export class Player {
             forward.y = 0;
             forward.normalize();
 
-            const right = new THREE.Vector3().crossVectors(this.camera.up, forward);
+            const right = new THREE.Vector3().crossVectors(forward, this.camera.up);
 
             const moveDirection = new THREE.Vector3();
             moveDirection.addScaledVector(forward, -inputDirection.z);
@@ -234,8 +234,8 @@ export class Player {
         for (let i = 0; i < intersects.length; i++) {
             const obj = intersects[i].object as THREE.Mesh;
             
-            // Skip the ground and player
-            if (obj.position.y < 0.5 || !obj.userData.physicsBody) {
+            // Only pick objects that have a physics body (dynamic objects)
+            if (!obj.userData.physicsBody) {
                 continue;
             }
 

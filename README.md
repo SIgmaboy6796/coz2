@@ -9,21 +9,45 @@ This is the foundational codebase for a 3D shooter game, inspired by games with 
 - **Build Tool:** [Vite](https://vitejs.dev/)
 - **Language:** [TypeScript](https://www.typescriptlang.org/)
 
-## Current
+## Controls
 
-- **W, A, S, D:** Move
+- **W, A, S, D:** Move (relative to camera direction)
 - **Space:** Jump
-- **E:** Pick up / Drop object
-- **Left Click (while holding):** Throw object
-- **Right Click (while holding):** Drop object
+- **Mouse Movement:** Look around (press any key to lock cursor)
+- **E:** Pick up nearby objects
+- **F:** Throw held object
+- **Escape or Mouse Leave Window:** Open Pause Menu
 
+## Pause Menu
+
+Press **ESC** or move your mouse out of the window to open the pause menu where you can:
+- Adjust **Mouse Sensitivity** (0.01 - 0.2)
+- View current **Keybinds**
+- **Resume** gameplay with pointer lock re-enabled
+- **Reset to Defaults** if needed
+
+## Current Features
+
+- First-person camera controller with mouse look
+- Physics-based movement and jumping
+- Dynamic object picking and throwing mechanics
+- 50+ test cubes spawned throughout the level
+- Invisible boundary walls preventing falling off the map
+- Real-time shadow mapping for better visual feedback
+- Ambient and directional lighting
+- Customizable mouse sensitivity
+- Pause menu with settings
+- Pointer lock for immersive gameplay
 
 ## Features to be added in the future
 
-More things to interact with
-Decent lighting
-Optimisation
-Multiplayer
-Proper explosions and effects
-Abilities
-Custom weapon attachments
+- Destructible environments
+- Explosive mechanics and effects
+- More interactive objects
+- Weapon system with attachments
+- Player abilities
+- Optimisation for many physics objects
+- Multiplayer support
+- Better audio integration
+- Particle effects and explosions
+
