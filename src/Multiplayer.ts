@@ -25,7 +25,7 @@ export class Multiplayer {
     private peers: Map<string, any> = new Map();
     private onPlayerJoined: ((player: PlayerState) => void) | null = null;
     private onPlayerLeft: ((playerId: string) => void) | null = null;
-    private onStateUpdate: ((gameState: GameState) => void) | null = null;
+    private onStateUpdate: ((position: { x: number; y: number; z: number }, playerId: string) => void) | null = null;
 
     constructor(signalServerUrl?: string) {
         this.peerId = this.generatePeerId();
@@ -118,7 +118,7 @@ export class Multiplayer {
         this.onPlayerLeft = callback;
     }
 
-    public setOnStateUpdate(callback: (gameState: GameState) => void) {
+    public setOnStateUpdate(callback: (position: { x: number; y: number; z: number }, playerId: string) => void) {
         this.onStateUpdate = callback;
     }
 

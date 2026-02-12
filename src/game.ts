@@ -13,6 +13,7 @@ export class Game {
     private rigidBodies: THREE.Mesh[] = [];
     private player: Player;
     private multiplayer: Multiplayer;
+    private remotePlayerMeshes: Map<string, THREE.Mesh> = new Map();
 
     constructor(private Ammo: any) {
         const { scene, camera, renderer } = setupScene();
@@ -42,8 +43,23 @@ export class Game {
         this.player.setOnHostingChange((isHosting) => {
             if (!isHosting) {
                 // Hosting stopped - show message to other players
-                console.log('Game hosting stopped');
+                console.log('[Game] Game hosting stopped');
             }
+        });
+
+        // Set up multiplayer callbacks
+        this.multiplayer.setOnPlayerJoined((player) => {
+            console.log('[Multiplayer] Player joined:', player.id);
+            this.spawnRemotePlayer(player.id, player.position);
+        });
+
+        this.multiplayer.setOnPlayerLeft((playerId) => {
+            console.log('[Multiplayer] Player left:', playerId);
+            this.removeRemotePlayer(playerId);
+        });
+
+        this.multiplayer.setOnStateUpdate((playerPos, playerId) => {
+            this.updateRemotePlayer(playerId, playerPos);
         });
 
         this.animate();
@@ -135,7 +151,50 @@ export class Game {
         this.player.update();
         updatePhysics(this.Ammo, this.physicsWorld, this.rigidBodies, deltaTime);
 
+        // Broadcast local player state if hosting or in multiplayer
+        if (this.multiplayer.getHostingStatus() || this.multiplayer.isMultiplayer()) {
+            const playerState = this.player.getPlayerState();
+            if (playerState) {
+                this.multiplayer.sendPlayerState({
+                    id: this.multiplayer.getPlayerId(),
+                    position: playerState.position,
+                    rotation: playerState.rotation,
+                    username: 'Player' // TODO: add username
+                });
+            }
+        }
+
         this.renderer.render(this.scene, this.camera);
+    }
+
+    private spawnRemotePlayer(playerId: string, position: { x: number; y: number; z: number }) {
+        const geometry = new THREE.CapsuleGeometry(0.4, 1.5, 4, 8);
+        const material = new THREE.MeshStandardMaterial({ color: 0xff6464 }); // Red for remote players
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(position.x, position.y, position.z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.name = `remote-player-${playerId}`;
+        
+        this.scene.add(mesh);
+        this.remotePlayerMeshes.set(playerId, mesh);
+        console.log('[Game] Spawned remote player:', playerId, 'at', position);
+    }
+
+    private updateRemotePlayer(playerId: string, position: { x: number; y: number; z: number }) {
+        const mesh = this.remotePlayerMeshes.get(playerId);
+        if (mesh) {
+            mesh.position.set(position.x, position.y, position.z);
+        }
+    }
+
+    private removeRemotePlayer(playerId: string) {
+        const mesh = this.remotePlayerMeshes.get(playerId);
+        if (mesh) {
+            this.scene.remove(mesh);
+            this.remotePlayerMeshes.delete(playerId);
+            console.log('[Game] Removed remote player:', playerId);
+        }
     }
 
     private async hostGame() {
@@ -154,6 +213,10 @@ export class Game {
         console.log('[Game] Stopping host...');
         this.multiplayer.stopHosting();
         this.player.setHosting(false);
+        // Remove all remote players
+        this.remotePlayerMeshes.forEach((mesh, playerId) => {
+            this.removeRemotePlayer(playerId);
+        });
         console.log('[Game] Hosting stopped');
     }
 }

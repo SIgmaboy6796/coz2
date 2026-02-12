@@ -17,9 +17,9 @@ export class Player {
         toggleCamera: false
     };
     private moveSpeed = 8;
-    private jumpForce = 5;
+    private jumpForce = 8;
     private jumpCooldown = 0;
-    private euler = new THREE.Euler(0, 0, 0, 'YXZ');
+    private lastYPos = 0;
     private mouseDelta = { x: 0, y: 0 };
     private sensitivity = 0.015;
     private pauseMenu: PauseMenu;
@@ -360,6 +360,40 @@ export class Player {
         // Zero velocity for kinematic objects
         this.pickedObject.body.setLinearVelocity(new this.Ammo.btVector3(0, 0, 0));
         this.pickedObject.body.setAngularVelocity(new this.Ammo.btVector3(0, 0, 0));
+    }
+
+    public getPlayerState() {
+        const motionState = this.body.getMotionState();
+        if (!motionState) {
+            return null;
+        }
+        
+        const transform = new this.Ammo.btTransform();
+        motionState.getWorldTransform(transform);
+        const pos = transform.getOrigin();
+        const rot = transform.getRotation();
+        
+        return {
+            position: { x: pos.x(), y: pos.y(), z: pos.z() },
+            rotation: { x: rot.x(), y: rot.y(), z: rot.z(), w: rot.w() },
+            velocity: { 
+                x: this.body.getLinearVelocity().x(), 
+                y: this.body.getLinearVelocity().y(), 
+                z: this.body.getLinearVelocity().z() 
+            }
+        };
+    }
+
+    public getPlayerPosition(): THREE.Vector3 {
+        const motionState = this.body.getMotionState();
+        if (!motionState) {
+            return new THREE.Vector3(0, 0, 0);
+        }
+        
+        const transform = new this.Ammo.btTransform();
+        motionState.getWorldTransform(transform);
+        const pos = transform.getOrigin();
+        return new THREE.Vector3(pos.x(), pos.y(), pos.z());
     }
 
     public setOnHostClick(callback: () => void) {
