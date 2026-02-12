@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PauseMenu, GameSettings } from '@/PauseMenu';
+import { rayTest } from '@/physics';
 
 export class Player {
     private camera: THREE.PerspectiveCamera;
@@ -17,7 +18,8 @@ export class Player {
         toggleCamera: false
     };
     private moveSpeed = 8;
-    private jumpForce = 8;
+    // Jump impulse scaled for player mass (~80). 400 ~= 5 m/s change in velocity.
+    private jumpForce = 400;
     private jumpCooldown = 0;
     private isCrouching = false;
     private crouchHeight = 0.75;
@@ -105,6 +107,7 @@ export class Player {
                     this.input.right = true;
                     break;
                 case this.keybinds.jump:
+                    e.preventDefault();
                     this.input.jump = true;
                     break;
                 case this.keybinds.pickup:
@@ -276,18 +279,29 @@ export class Player {
 
         // Jump - simplified: can jump if cooldown is ready and not moving upward too fast
         // This allows jumping on ground, objects, and other players
-        if (this.input.jump && this.jumpCooldown === 0) {
-            const isMovingUpwardFast = yVelocity > 1.0; // Only prevent jump if actively jumping/moving up fast
+            if (this.input.jump && this.jumpCooldown === 0) {
+                const isMovingUpwardFast = yVelocity > 1.0; // Only prevent jump if actively jumping/moving up fast
             
-            if (!isMovingUpwardFast) {
-                console.log('[Jump] ✓ JUMPING! yVel was:', yVelocity.toFixed(2), 'applying impulse:', this.jumpForce);
-                this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
-                this.jumpCooldown = 3;
-            } else {
-                console.log('[Jump] ✗ Moving upward too fast, yVel:', yVelocity.toFixed(2));
-            }
+                if (!isMovingUpwardFast) {
+                    console.log('[Jump] ✓ JUMPING! yVel was:', yVelocity.toFixed(2), 'applying impulse:', this.jumpForce);
+                    try {
+                        // Ensure body is active before applying impulse
+                        (this.body as any).activate && (this.body as any).activate();
+                    } catch (e) {
+                        // ignore
+                    }
+                    // Also check with Ammo ray test as secondary confirmation (via physics helper)
+                    const from = new THREE.Vector3(playerPos.x, playerPos.y - 0.6, playerPos.z);
+                    const to = new THREE.Vector3(playerPos.x, playerPos.y - 1.2, playerPos.z);
+                    const rayRes = rayTest(this.Ammo, this._physicsWorld, from, to);
+                    const rayHasHit = !!rayRes.hasHit;
+                    this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
+                    this.jumpCooldown = 3;
+                } else {
+                    console.log('[Jump] ✗ Moving upward too fast, yVel:', yVelocity.toFixed(2));
+                }
             
-            this.input.jump = false;
+                this.input.jump = false;
         }
 
         // Update camera rotation based on mouse movement

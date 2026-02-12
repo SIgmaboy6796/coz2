@@ -51,3 +51,29 @@ export function updatePhysics(Ammo: any, physicsWorld: any, rigidBodies: THREE.M
         }
     }
 }
+
+// Perform a ray test in the Ammo physics world between two points (THREE.Vector3).
+// Returns an object with `hasHit` and optional `hitPoint` in world coordinates.
+export function rayTest(Ammo: any, physicsWorld: any, from: THREE.Vector3, to: THREE.Vector3) {
+    try {
+        const fromVec = new Ammo.btVector3(from.x, from.y, from.z);
+        const toVec = new Ammo.btVector3(to.x, to.y, to.z);
+        const rayCallback = new Ammo.ClosestRayResultCallback(fromVec, toVec);
+        physicsWorld.rayTest(fromVec, toVec, rayCallback);
+
+        const hasHit = rayCallback.hasHit && rayCallback.hasHit();
+        if (hasHit) {
+            const hitPoint = rayCallback.get_m_hitPointWorld();
+            const hx = hitPoint.x();
+            const hy = hitPoint.y();
+            const hz = hitPoint.z();
+            return { hasHit: true, hitPoint: new THREE.Vector3(hx, hy, hz) };
+        }
+
+        return { hasHit: false };
+    } catch (e) {
+        // Some Ammo builds may not expose ClosestRayResultCallback in the same way.
+        console.warn('[physics.rayTest] rayTest failed:', e);
+        return { hasHit: false };
+    }
+}
