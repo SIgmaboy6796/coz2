@@ -46,6 +46,9 @@ export class Player {
         keybinds: this.keybinds
     };
 
+    private isHosting = false;
+    private onHostingChange: ((isHosting: boolean) => void) | null = null;
+
     constructor(private Ammo: any, camera: THREE.PerspectiveCamera, physicsWorld: any, scene: THREE.Scene, rigidBodies: THREE.Mesh[]) {
         this.camera = camera;
         this.scene = scene;
@@ -76,7 +79,7 @@ export class Player {
     }
 
     private createPlayerModel() {
-        const geometry = new THREE.CapsuleGeometry(0.4, 1.5, 4, 8);
+        const geometry = new THREE.CapsuleGeometry(0.4, 1, 4, 8);
         const material = new THREE.MeshStandardMaterial({ color: 0x4488ff });
         this.playerModel = new THREE.Mesh(geometry, material);
         this.playerModel.castShadow = true;
@@ -359,6 +362,26 @@ export class Player {
 
     public setOnHostClick(callback: () => void) {
         this.pauseMenu.setOnHostClick(callback);
+    }
+
+    public setOnStopHostClick(callback: () => void) {
+        this.pauseMenu.setOnStopHostClick(callback);
+    }
+
+    public setOnHostingChange(callback: (isHosting: boolean) => void) {
+        this.onHostingChange = callback;
+    }
+
+    public setHosting(hosting: boolean) {
+        this.isHosting = hosting;
+        this.pauseMenu.setHostingStatus(hosting);
+        if (this.onHostingChange) {
+            this.onHostingChange(hosting);
+        }
+    }
+
+    public isGameHosting(): boolean {
+        return this.isHosting;
     }
 
     public showMultiplayerShareLink(url: string) {

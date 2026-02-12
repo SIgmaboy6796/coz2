@@ -18,6 +18,8 @@ export class PauseMenu {
     private settings: GameSettings;
     private onClose: (() => void) | null = null;
     private onHostClick: (() => void) | null = null;
+    private onStopHostClick: (() => void) | null = null;
+    private isHosting = false;
 
     constructor(private defaultSettings: GameSettings) {
         this.settings = JSON.parse(JSON.stringify(defaultSettings));
@@ -53,6 +55,26 @@ export class PauseMenu {
 
     public setOnHostClick(callback: () => void) {
         this.onHostClick = callback;
+    }
+
+    public setOnStopHostClick(callback: () => void) {
+        this.onStopHostClick = callback;
+    }
+
+    public setHostingStatus(isHosting: boolean) {
+        this.isHosting = isHosting;
+        const hostBtn = document.getElementById('host-btn') as HTMLButtonElement;
+        if (hostBtn) {
+            if (isHosting) {
+                hostBtn.textContent = 'STOP HOSTING';
+                hostBtn.style.background = 'linear-gradient(135deg, #ff6464 0%, #dd4040 100%)';
+                hostBtn.style.borderColor = 'rgba(255, 100, 100, 0.5)';
+            } else {
+                hostBtn.textContent = 'HOST GAME';
+                hostBtn.style.background = 'linear-gradient(135deg, #64ff96 0%, #40dd70 100%)';
+                hostBtn.style.borderColor = 'rgba(100, 255, 150, 0.5)';
+            }
+        }
     }
 
     public showShareLink(url: string) {
@@ -364,8 +386,14 @@ export class PauseMenu {
 
         if (hostBtn) {
             hostBtn.addEventListener('click', () => {
-                if (this.onHostClick) {
-                    this.onHostClick();
+                if (this.isHosting) {
+                    if (this.onStopHostClick) {
+                        this.onStopHostClick();
+                    }
+                } else {
+                    if (this.onHostClick) {
+                        this.onHostClick();
+                    }
                 }
             });
         }

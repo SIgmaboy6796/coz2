@@ -125,6 +125,33 @@ export class Multiplayer {
         return this.peers.size;
     }
 
+    public stopHosting() {
+        this.isHost = false;
+        
+        // Notify all connected peers that hosting has stopped
+        this.peers.forEach((peer) => {
+            if (peer && peer.send) {
+                try {
+                    peer.send(JSON.stringify({
+                        type: 'hostStopped',
+                        message: 'User stopped hosting'
+                    }));
+                } catch (e) {
+                    // Ignore errors
+                }
+            }
+        });
+        
+        // Disconnect all peers
+        this.disconnect();
+        
+        console.log('Stopped hosting game');
+    }
+
+    public getHostingStatus(): boolean {
+        return this.isHost;
+    }
+
     public disconnect() {
         this.peers.forEach((peer) => {
             try {

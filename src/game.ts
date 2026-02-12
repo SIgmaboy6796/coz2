@@ -30,9 +30,20 @@ export class Game {
 
         this.player = new Player(this.Ammo, this.camera, this.physicsWorld, this.scene, this.rigidBodies);
         
-        // Set up pause menu host button
+        // Set up pause menu host button callbacks
         this.player.setOnHostClick(() => {
             this.hostGame();
+        });
+
+        this.player.setOnStopHostClick(() => {
+            this.stopHosting();
+        });
+
+        this.player.setOnHostingChange((isHosting) => {
+            if (!isHosting) {
+                // Hosting stopped - show message to other players
+                console.log('Game hosting stopped');
+            }
         });
 
         this.animate();
@@ -130,9 +141,15 @@ export class Game {
     private async hostGame() {
         try {
             const shareUrl = await this.multiplayer.hostGame();
+            this.player.setHosting(true);
             this.player.showMultiplayerShareLink(shareUrl);
         } catch (error) {
             console.error('Failed to host game:', error);
         }
+    }
+
+    private stopHosting() {
+        this.multiplayer.stopHosting();
+        this.player.setHosting(false);
     }
 }
