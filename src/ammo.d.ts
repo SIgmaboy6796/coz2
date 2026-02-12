@@ -1,4 +1,3 @@
 declare module 'ammo.js' {
-  function Ammo(): Promise<any>;
-  export default Ammo;
+  export function Ammo(): Promise<any>;
 }

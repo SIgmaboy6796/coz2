@@ -19,19 +19,19 @@ export interface GameState {
 
 export class Multiplayer {
     private peerId: string = '';
-    private peer: any = null;
-    private signalServer = 'wss://signal.example.com'; // Placeholder - user can override
     private isHost = false;
     private peers: Map<string, any> = new Map();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private onPlayerJoined: ((player: PlayerState) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private onPlayerLeft: ((playerId: string) => void) | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private onStateUpdate: ((position: { x: number; y: number; z: number }, playerId: string) => void) | null = null;
 
-    constructor(signalServerUrl?: string) {
+    constructor(_signalServerUrl?: string) {
         this.peerId = this.generatePeerId();
-        if (signalServerUrl) {
-            this.signalServer = signalServerUrl;
-        }
+        // TODO: Implement WebRTC signaling server support
+        // if (_signalServerUrl) { ... }
     }
 
     private generatePeerId(): string {

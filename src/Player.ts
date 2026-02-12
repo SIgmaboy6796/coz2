@@ -19,8 +19,13 @@ export class Player {
     private moveSpeed = 8;
     private jumpForce = 8;
     private jumpCooldown = 0;
-    private lastYPos = 0;
+    private isCrouching = false;
+    private crouchHeight = 0.75;
+    private standHeight = 1.5;
+    private normalSpeed = 8;
+    private crouchSpeed = 4;
     private mouseDelta = { x: 0, y: 0 };
+    private euler = new THREE.Euler(0, 0, 0, 'YXZ');
     private sensitivity = 0.015;
     private pauseMenu: PauseMenu;
     private isPaused = false;
@@ -28,8 +33,6 @@ export class Player {
     private pickedObject: any = null;
     private constraintDist = 1.5;
     private scene: THREE.Scene;
-    private physicsWorld: any;
-    private rigidBodies: THREE.Mesh[];
     private keybinds = {
         forward: 'KeyW',
         backward: 'KeyS',
@@ -49,11 +52,9 @@ export class Player {
     private isHosting = false;
     private onHostingChange: ((isHosting: boolean) => void) | null = null;
 
-    constructor(private Ammo: any, camera: THREE.PerspectiveCamera, physicsWorld: any, scene: THREE.Scene, rigidBodies: THREE.Mesh[]) {
+    constructor(private Ammo: any, camera: THREE.PerspectiveCamera, private _physicsWorld: any, scene: THREE.Scene, _rigidBodies: THREE.Mesh[]) {
         this.camera = camera;
         this.scene = scene;
-        this.physicsWorld = physicsWorld;
-        this.rigidBodies = rigidBodies;
         this.pauseMenu = new PauseMenu(this.defaultSettings);
 
         const radius = 0.5;
@@ -72,14 +73,14 @@ export class Player {
         this.body = new this.Ammo.btRigidBody(rbInfo);
         this.body.setActivationState(4);
         this.body.setAngularFactor(new this.Ammo.btVector3(0, 1, 0));
-        physicsWorld.addRigidBody(this.body);
+        this._physicsWorld.addRigidBody(this.body);
 
         this.createPlayerModel();
         this.setupInput();
     }
 
     private createPlayerModel() {
-        const geometry = new THREE.CapsuleGeometry(0.4, 1, 4, 8);
+        const geometry = new THREE.CapsuleGeometry(0.4, this.standHeight, 4, 8);
         const material = new THREE.MeshStandardMaterial({ color: 0x4488ff });
         this.playerModel = new THREE.Mesh(geometry, material);
         this.playerModel.castShadow = true;
@@ -115,6 +116,10 @@ export class Player {
                 case this.keybinds.toggleCamera:
                     this.toggleCamera();
                     break;
+                case 'ShiftLeft':
+                case 'ShiftRight':
+                    this.isCrouching = true;
+                    break;
                 case 'Escape':
                     this.togglePauseMenu();
                     break;
@@ -143,6 +148,10 @@ export class Player {
                     break;
                 case this.keybinds.throw:
                     this.input.throw = false;
+                    break;
+                case 'ShiftLeft':
+                case 'ShiftRight':
+                    this.isCrouching = false;
                     break;
             }
         });
@@ -193,6 +202,18 @@ export class Player {
     public update() {
         this.jumpCooldown = Math.max(0, this.jumpCooldown - 1);
 
+        // Apply crouching effects
+        this.moveSpeed = this.isCrouching ? this.crouchSpeed : this.normalSpeed;
+        
+        if (this.playerModel) {
+            if (this.isCrouching) {
+                // Scale model down when crouching
+                this.playerModel.scale.y = this.crouchHeight / this.standHeight;
+            } else {
+                this.playerModel.scale.y = 1;
+            }
+        }
+
         const inputDirection = new THREE.Vector3();
         if (this.input.forward) inputDirection.z -= 1;
         if (this.input.backward) inputDirection.z += 1;
@@ -222,19 +243,13 @@ export class Player {
             this.body.setLinearVelocity(new this.Ammo.btVector3(0, yVelocity, 0));
         }
 
-        if (this.input.jump && this.jumpCooldown === 0 && yVelocity < 0.5) {
-            console.log('Jump! yVelocity:', yVelocity);
-            this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
-            this.jumpCooldown = 10;
-            this.input.jump = false; // Prevent rapid re-jumping
-        }
-
         const motionState = this.body.getMotionState();
+        let playerPos = new THREE.Vector3(0, 0, 0);
         if (motionState) {
             const transform = new this.Ammo.btTransform();
             motionState.getWorldTransform(transform);
             const pos = transform.getOrigin();
-            const playerPos = new THREE.Vector3(pos.x(), pos.y(), pos.z());
+            playerPos = new THREE.Vector3(pos.x(), pos.y(), pos.z());
 
             // Update player model position
             if (this.playerModel) {
@@ -242,7 +257,8 @@ export class Player {
             }
 
             if (this.cameraMode === 'first-person') {
-                this.camera.position.copy(playerPos).add(new THREE.Vector3(0, 0.5, 0));
+                const cameraHeight = this.isCrouching ? 0.3 : 0.5;
+                this.camera.position.copy(playerPos).add(new THREE.Vector3(0, cameraHeight, 0));
             } else {
                 // Third person: camera behind and above
                 const backward = new THREE.Vector3();
@@ -251,10 +267,27 @@ export class Player {
                 backward.y = 0;
                 backward.normalize();
 
-                const cameraOffset = backward.multiplyScalar(3).add(new THREE.Vector3(0, 1.5, 0));
+                const cameraHeight = this.isCrouching ? 0.8 : 1.5;
+                const cameraOffset = backward.multiplyScalar(3).add(new THREE.Vector3(0, cameraHeight, 0));
                 this.camera.position.copy(playerPos).add(cameraOffset);
                 this.camera.lookAt(playerPos.clone().add(new THREE.Vector3(0, 1, 0)));
             }
+        }
+
+        // Jump - simplified: can jump if cooldown is ready and not moving upward too fast
+        // This allows jumping on ground, objects, and other players
+        if (this.input.jump && this.jumpCooldown === 0) {
+            const isMovingUpwardFast = yVelocity > 1.0; // Only prevent jump if actively jumping/moving up fast
+            
+            if (!isMovingUpwardFast) {
+                console.log('[Jump] ✓ JUMPING! yVel was:', yVelocity.toFixed(2), 'applying impulse:', this.jumpForce);
+                this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
+                this.jumpCooldown = 3;
+            } else {
+                console.log('[Jump] ✗ Moving upward too fast, yVel:', yVelocity.toFixed(2));
+            }
+            
+            this.input.jump = false;
         }
 
         // Update camera rotation based on mouse movement

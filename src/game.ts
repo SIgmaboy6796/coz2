@@ -214,7 +214,7 @@ export class Game {
         this.multiplayer.stopHosting();
         this.player.setHosting(false);
         // Remove all remote players
-        this.remotePlayerMeshes.forEach((mesh, playerId) => {
+        this.remotePlayerMeshes.forEach((_mesh, playerId) => {
             this.removeRemotePlayer(playerId);
         });
         console.log('[Game] Hosting stopped');
