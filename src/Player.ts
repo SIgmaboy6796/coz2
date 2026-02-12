@@ -279,10 +279,19 @@ export class Player {
 
         // Jump - simplified: can jump if cooldown is ready and not moving upward too fast
         // This allows jumping on ground, objects, and other players
+            // perform Ammo rayTest to ensure the player is standing on a collider
+            const from = new THREE.Vector3(playerPos.x, playerPos.y - 0.6, playerPos.z);
+            const to = new THREE.Vector3(playerPos.x, playerPos.y - 1.2, playerPos.z);
+            const rayRes = rayTest(this.Ammo, this._physicsWorld, from, to);
+            const rayHasHit = !!rayRes.hasHit;
+
             if (this.input.jump && this.jumpCooldown === 0) {
                 const isMovingUpwardFast = yVelocity > 1.0; // Only prevent jump if actively jumping/moving up fast
-            
-                if (!isMovingUpwardFast) {
+
+                // Use the ray test result to ensure we're standing on a collider
+                const effectiveRayHit = rayHasHit;
+
+                if (!isMovingUpwardFast && effectiveRayHit) {
                     console.log('[Jump] ✓ JUMPING! yVel was:', yVelocity.toFixed(2), 'applying impulse:', this.jumpForce);
                     try {
                         // Ensure body is active before applying impulse
@@ -290,19 +299,14 @@ export class Player {
                     } catch (e) {
                         // ignore
                     }
-                    // Also check with Ammo ray test as secondary confirmation (via physics helper)
-                    const from = new THREE.Vector3(playerPos.x, playerPos.y - 0.6, playerPos.z);
-                    const to = new THREE.Vector3(playerPos.x, playerPos.y - 1.2, playerPos.z);
-                    const rayRes = rayTest(this.Ammo, this._physicsWorld, from, to);
-                    const rayHasHit = !!rayRes.hasHit;
                     this.body.applyCentralImpulse(new this.Ammo.btVector3(0, this.jumpForce, 0));
                     this.jumpCooldown = 3;
                 } else {
-                    console.log('[Jump] ✗ Moving upward too fast, yVel:', yVelocity.toFixed(2));
+                    console.log('[Jump] ✗ Cannot jump - movingUp:', isMovingUpwardFast, 'rayHit:', effectiveRayHit);
                 }
-            
+
                 this.input.jump = false;
-        }
+            }
 
         // Update camera rotation based on mouse movement
         this.euler.setFromQuaternion(this.camera.quaternion);

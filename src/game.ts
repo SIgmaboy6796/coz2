@@ -25,6 +25,7 @@ export class Game {
         this.multiplayer = new Multiplayer();
 
         this.createGround();
+        this.createTerrain();
         this.createDynamicBox();
         this.createTestCubes();
         this.createBoundaryWalls();
@@ -63,6 +64,33 @@ export class Game {
         });
 
         this.animate();
+    }
+
+    private createTerrain() {
+        // Simple procedural terrain using boxes (static colliders)
+        const size = 40; // number of tiles per side
+        const spacing = 1.0;
+        const half = (size * spacing) / 2;
+
+        for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size; j++) {
+                const x = i * spacing - half;
+                const z = j * spacing - half;
+
+                // Height field via combined sine waves + small randomness
+                const h = Math.max(0.5, (Math.sin(i * 0.3) + Math.cos(j * 0.25)) * 1.5 + Math.random() * 0.5 + 1.0);
+
+                const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+                const tile = new THREE.Mesh(new THREE.BoxGeometry(1, h, 1), mat);
+                tile.position.set(x, h / 2 - 0.5, z);
+                tile.receiveShadow = true;
+                tile.castShadow = true;
+                this.scene.add(tile);
+
+                const shape = new this.Ammo.btBoxShape(new this.Ammo.btVector3(0.5, h / 2, 0.5));
+                createRigidBody(this.Ammo, tile, shape, 0, this.physicsWorld, this.rigidBodies);
+            }
+        }
     }
 
     private createGround() {

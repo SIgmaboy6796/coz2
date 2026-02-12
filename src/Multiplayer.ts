@@ -192,6 +192,12 @@ export class Multiplayer {
                 }
             });
         }
+        // Also send to single remote (manual-signaling) if available
+        try {
+            this.sendToRemote({ type: 'playerState', data: state });
+        } catch (e) {
+            // ignore
+        }
     }
 
     public sendObjectState(state: ObjectState) {
