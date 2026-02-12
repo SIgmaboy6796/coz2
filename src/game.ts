@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { setupScene } from '@/scene';
 import { createPhysicsWorld, updatePhysics, createRigidBody } from '@/physics';
 import { Player } from '@/Player';
+import { Multiplayer } from '@/Multiplayer';
 
 export class Game {
     private scene: THREE.Scene;
@@ -11,6 +12,7 @@ export class Game {
     private physicsWorld: any;
     private rigidBodies: THREE.Mesh[] = [];
     private player: Player;
+    private multiplayer: Multiplayer;
 
     constructor(private Ammo: any) {
         const { scene, camera, renderer } = setupScene();
@@ -19,6 +21,7 @@ export class Game {
         this.renderer = renderer;
 
         this.physicsWorld = createPhysicsWorld(this.Ammo);
+        this.multiplayer = new Multiplayer();
 
         this.createGround();
         this.createDynamicBox();
@@ -26,6 +29,11 @@ export class Game {
         this.createBoundaryWalls();
 
         this.player = new Player(this.Ammo, this.camera, this.physicsWorld, this.scene, this.rigidBodies);
+        
+        // Set up pause menu host button
+        this.player.setOnHostClick(() => {
+            this.hostGame();
+        });
 
         this.animate();
     }
@@ -117,5 +125,14 @@ export class Game {
         updatePhysics(this.Ammo, this.physicsWorld, this.rigidBodies, deltaTime);
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    private async hostGame() {
+        try {
+            const shareUrl = await this.multiplayer.hostGame();
+            this.player.showMultiplayerShareLink(shareUrl);
+        } catch (error) {
+            console.error('Failed to host game:', error);
+        }
     }
 }
